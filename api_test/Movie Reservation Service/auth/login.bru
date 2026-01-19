@@ -1,0 +1,28 @@
+meta {
+  name: login
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/auth/login
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer
+}
+
+body:json {
+    {
+      "email": "admin@example.com",
+      "username": "admin",
+      "password": "admin"
+    }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

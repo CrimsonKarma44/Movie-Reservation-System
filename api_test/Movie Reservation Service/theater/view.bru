@@ -1,0 +1,20 @@
+meta {
+  name: view
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:8080/movie/3
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaXNfYWRtaW4iOnRydWUsImV4cCI6MTc2ODcxMDc5NiwiaWF0IjoxNzY4NzA5ODk2fQ.Ewdc9Ns4SbT-l3rNH2lS1yr79UUPgGraB6NpGocEmj8
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

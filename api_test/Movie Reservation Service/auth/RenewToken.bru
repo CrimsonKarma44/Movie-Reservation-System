@@ -1,0 +1,16 @@
+```Go-Journey/API/Movie-Reservation-System/api_test/Movie Reservation Service/auth/RenewToken.bru#L1-12
+meta {
+  name: Renew Token
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/auth/renew-token
+  body: none
+  auth: none
+}
+
+script:post-response {
+  bru.setVar("access_token", res.body.access_token);
+}

@@ -1,0 +1,20 @@
+```Go-Journey/API/Movie-Reservation-System/api_test/Movie Reservation Service/auth/Signup.bru#L1-17
+meta {
+  name: Signup
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "test@example.com",
+    "username": "testuser",
+    "password": "password123"
+  }
+}

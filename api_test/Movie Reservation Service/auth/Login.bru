@@ -1,0 +1,23 @@
+```Go-Journey/API/Movie-Reservation-System/api_test/Movie Reservation Service/auth/Login.bru#L1-16
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "test@example.com",
+    "password": "password123"
+  }
+}
+
+script:post-response {
+  bru.setVar("access_token", res.body.access_token);
+}
