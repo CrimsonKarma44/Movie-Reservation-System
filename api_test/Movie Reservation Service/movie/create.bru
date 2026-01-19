@@ -1,0 +1,29 @@
+meta {
+  name: create
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/movie/add/
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaXNfYWRtaW4iOnRydWUsImV4cCI6MTc2ODcxMDc5NiwiaWF0IjoxNzY4NzA5ODk2fQ.Ewdc9Ns4SbT-l3rNH2lS1yr79UUPgGraB6NpGocEmj8
+}
+
+body:json {
+    {
+      "title": "Ghost in the Shell",
+      "description": "A cyborg federal agent, Major Motoko Kusanagi, trails a powerful hacker known as the \"Puppet Master\" who modifies human identities.",
+      "year": 1995,
+      "duration": 83
+    }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
