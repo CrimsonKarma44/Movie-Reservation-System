@@ -16,7 +16,7 @@ type App struct {
 	defaultAdmin models.User
 }
 
-func (app *App) Init(refreshStore map[uint]string) error {
+func (app *App) Init(refreshStore map[uint]string, accessStore map[uint]string) error {
 	err := godotenv.Load()
 	if err != nil {
 		return fmt.Errorf("Error loading .env file")
@@ -36,7 +36,7 @@ func (app *App) Init(refreshStore map[uint]string) error {
 	app.CreateDefaultAdmin(db.DB, ENV)
 
 	// starts the server
-	server := NewServer(db.DB, ENV, refreshStore)
+	server := NewServer(db.DB, ENV, refreshStore, accessStore)
 	server.Run()
 
 	return nil

@@ -23,18 +23,18 @@ type url struct {
 	authMiddleware *middleware.AuthMiddleware
 }
 
-func NewServer(db *gorm.DB, env *models.Env, refreshStore map[uint]string) *url {
+func NewServer(db *gorm.DB, env *models.Env, refreshStore map[uint]string, accessStore map[uint]string) *url {
 
 	return &url{
 		db: db,
 
-		authHandlers:        handlers.NewAuthHandler(services.NewAuthService(db), env, refreshStore),
+		authHandlers:        handlers.NewAuthHandler(services.NewAuthService(db), env, refreshStore, accessStore),
 		movieHandlers:       handlers.NewMovieHandler(services.NewMovieService(db)),
 		reservationHandlers: handlers.NewReservationHandler(services.NewReservationService(db)),
 		theaterHandlers:     handlers.NewTheaterHandler(services.NewTheaterService(db)),
 		showtimeHandlers:    handlers.NewShowtimeHandler(services.NewShowtimeService(db)),
 
-		authMiddleware: middleware.NewAuthMiddleware(env, refreshStore),
+		authMiddleware: middleware.NewAuthMiddleware(env, refreshStore, accessStore),
 	}
 
 }

@@ -17,13 +17,15 @@ type AuthMiddleware struct {
 	JwtSecretKeyRefresh []byte
 
 	RefreshStore map[uint]string
+	AccessStore  map[uint]string
 }
 
-func NewAuthMiddleware(env *models.Env, refreshStore map[uint]string) *AuthMiddleware {
+func NewAuthMiddleware(env *models.Env, refreshStore map[uint]string, accessStore map[uint]string) *AuthMiddleware {
 	return &AuthMiddleware{
 		JwtSecretKeyAccess:  env.JWTAccessSecret,
 		JwtSecretKeyRefresh: env.JWTRefreshSecret,
 		RefreshStore:        refreshStore,
+		AccessStore:         accessStore,
 	}
 }
 
