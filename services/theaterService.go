@@ -37,7 +37,12 @@ func (ts *TheaterService) UpdateTheater(id int, theaterUpdate *models.Theater) e
 }
 
 func (ts *TheaterService) DeleteTheater(id int) error {
-	if err := ts.db.Delete(&models.Theater{}, id).Error; err != nil {
+	var theater models.Theater
+	if err := ts.db.First(&theater, id).Error; err != nil {
+		return err
+	}
+
+	if err := ts.db.Delete(&theater).Error; err != nil {
 		return fmt.Errorf("failed to delete theater: %w", err)
 	}
 	return nil
@@ -45,7 +50,7 @@ func (ts *TheaterService) DeleteTheater(id int) error {
 
 func (ts *TheaterService) GetTheaterByID(id int) (*models.Theater, error) {
 	var theater models.Theater
-	if err := ts.db.First(&theater, id).Error; err != nil {
+	if err := ts.db.Preload("ShowTimes").First(&theater, id).Error; err != nil {
 		return nil, err
 	}
 	return &theater, nil

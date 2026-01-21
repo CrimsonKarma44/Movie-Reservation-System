@@ -1,6 +1,8 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type Theater struct {
 	gorm.Model
@@ -20,3 +22,6 @@ func NewTheater(name string, capacity int, location string) Theater {
 	}
 }
 
+func (theater Theater) Type() string {
+	return "Theater"
+}

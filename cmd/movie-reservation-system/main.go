@@ -10,8 +10,7 @@ var app *server.App
 
 func main() {
 	var refreshStore = make(map[uint]string)
-	var accessStore = make(map[uint]string)
-	err = app.Init(refreshStore, accessStore)
+	err = app.Init(refreshStore)
 	if err != nil {
 		fmt.Printf("Error initializing application: %v\n", err)
 	}

@@ -24,3 +24,7 @@ func (movie Movie) New(title string, description string, year int, duration int)
 		Duration:    movie.Duration,
 	}
 }
+
+func (movie Movie) Type() string {
+	return "Movie"
+}

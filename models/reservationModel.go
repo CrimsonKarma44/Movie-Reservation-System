@@ -1,6 +1,8 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type Reservation struct {
 	gorm.Model
@@ -23,11 +25,13 @@ func NewReservation(userID int, showTimeID int, seats int, cost int) Reservation
 	}
 }
 
+func (rm Reservation) Type() string {
+	return "Reservation"
+}
+
 func (rm *Reservation) SetExpired() {
 	rm.expiryStatus = true
 }
-
-
 
 // kept aside for now
 type ReservationsModel struct {

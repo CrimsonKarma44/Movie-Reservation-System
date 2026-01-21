@@ -23,18 +23,18 @@ type url struct {
 	authMiddleware *middleware.AuthMiddleware
 }
 
-func NewServer(db *gorm.DB, env *models.Env, refreshStore map[uint]string, accessStore map[uint]string) *url {
+func NewServer(db *gorm.DB, env *models.Env, refreshStore map[uint]string) *url {
 
 	return &url{
 		db: db,
 
-		authHandlers:        handlers.NewAuthHandler(services.NewAuthService(db), env, refreshStore, accessStore),
+		authHandlers:        handlers.NewAuthHandler(services.NewAuthService(db), env, refreshStore),
 		movieHandlers:       handlers.NewMovieHandler(services.NewMovieService(db)),
 		reservationHandlers: handlers.NewReservationHandler(services.NewReservationService(db)),
 		theaterHandlers:     handlers.NewTheaterHandler(services.NewTheaterService(db)),
-		showtimeHandlers:    handlers.NewShowtimeHandler(services.NewShowtimeService(db)),
+		showtimeHandlers:    handlers.NewShowtimeHandler(services.NewService(db, models.ShowTime{})),
 
-		authMiddleware: middleware.NewAuthMiddleware(env, refreshStore, accessStore),
+		authMiddleware: middleware.NewAuthMiddleware(env, refreshStore),
 	}
 
 }
@@ -48,6 +48,7 @@ func (s *url) Run() {
 	s.auth(mux)
 	s.movie(mux)
 	s.theater(mux)
+	s.showtime(mux)
 
 	// static Dir
 	// mux.Handle("/static/", s.authMiddleware.ProtectMiddleware(http.StripPrefix("/static/", http.FileServer(http.Dir(path[1:]))).ServeHTTP))
@@ -83,4 +84,14 @@ func (s *url) theater(mux *http.ServeMux) {
 	mux.Handle("/theater/add", s.authMiddleware.ProtectMiddleware(middleware.AdminMiddleware(http.HandlerFunc(s.theaterHandlers.CreateTheater))))
 	mux.Handle("/theater/{id}/update", s.authMiddleware.ProtectMiddleware(middleware.AdminMiddleware(http.HandlerFunc(s.theaterHandlers.UpdateTheater))))
 	mux.Handle("/theater/{id}/delete", s.authMiddleware.ProtectMiddleware(middleware.AdminMiddleware(http.HandlerFunc(s.theaterHandlers.DeleteTheater))))
+}
+
+func (s *url) showtime(mux *http.ServeMux) {
+	mux.Handle("/showtimes", s.authMiddleware.ProtectMiddleware(http.HandlerFunc(s.showtimeHandlers.GetAllShowtimes)))
+	mux.Handle("/showtime/{id}", s.authMiddleware.ProtectMiddleware(http.HandlerFunc(s.showtimeHandlers.GetShowtime)))
+
+	// admin
+	mux.Handle("/showtime/add", s.authMiddleware.ProtectMiddleware(middleware.AdminMiddleware(http.HandlerFunc(s.showtimeHandlers.CreateShowtime))))
+	mux.Handle("/showtime/{id}/update", s.authMiddleware.ProtectMiddleware(middleware.AdminMiddleware(http.HandlerFunc(s.showtimeHandlers.UpdateShowtime))))
+	mux.Handle("/showtime/{id}/delete", s.authMiddleware.ProtectMiddleware(middleware.AdminMiddleware(http.HandlerFunc(s.showtimeHandlers.DeleteShowtime))))
 }

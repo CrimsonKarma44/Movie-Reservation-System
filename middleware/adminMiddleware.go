@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"movie-reservation-system/models"
 	"movie-reservation-system/utils"
 	"net/http"
@@ -11,7 +10,7 @@ func AdminMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Get the claims from the token
 		claims, ok := r.Context().Value(utils.UserContextKey).(*models.Claims)
-		fmt.Println(claims.ID, claims.IsAdmin)
+		// fmt.Println(claims.ID, claims.IsAdmin)
 		if !ok {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return

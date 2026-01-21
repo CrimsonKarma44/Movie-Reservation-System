@@ -20,16 +20,14 @@ type AuthHandler struct {
 	JwtSecretKeyRefresh []byte
 
 	RefreshStore map[uint]string
-	AccessStore  map[uint]string
 }
 
-func NewAuthHandler(authService *services.AuthService, env *models.Env, refreshStore map[uint]string, accessStore map[uint]string) *AuthHandler {
+func NewAuthHandler(authService *services.AuthService, env *models.Env, refreshStore map[uint]string) *AuthHandler {
 	return &AuthHandler{
 		AuthService:         authService,
 		JwtSecretKeyAccess:  env.JWTAccessSecret,
 		JwtSecretKeyRefresh: env.JWTRefreshSecret,
 		RefreshStore:        refreshStore,
-		AccessStore:         accessStore,
 	}
 }
 

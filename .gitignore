@@ -1,0 +1,45 @@
+# OS/IDE junk
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln
+
+# Go build outputs and vendor
+/bin/
+/pkg/
+/vendor/
+
+# Go test and coverage artifacts
+*.test
+*.out
+coverage.out
+*.prof
+*.coverprofile
+
+# Logs
+*.log
+
+# Environment files (keep secrets out of VCS)
+*.env
+.env.*
+
+# Misc temporary files
+*.tmp
+*.swp
+*~
+
+# Data and caches
+*.db
+*.sqlite
+.cache/
+
+# Build artifacts
+build/
+dist/

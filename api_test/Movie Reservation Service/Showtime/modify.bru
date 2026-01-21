@@ -1,17 +1,27 @@
 meta {
-  name: view
+  name: modify
   type: http
-  seq: 1
+  seq: 5
 }
 
-get {
-  url: http://localhost:8080/theater/3
-  body: none
+put {
+  url: http://localhost:8080/showtime/1/update
+  body: json
   auth: inherit
 }
 
 headers {
   Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaXNfYWRtaW4iOnRydWUsImV4cCI6MTc2ODcxMDc5NiwiaWF0IjoxNzY4NzA5ODk2fQ.Ewdc9Ns4SbT-l3rNH2lS1yr79UUPgGraB6NpGocEmj8
+}
+
+body:json {
+  {
+    "price": 1500,
+    "startTime": "2026-02-15T19:30:00Z",
+    "movieID": 3,
+    "theaterID": 7,
+    "availableSeats": 20
+  }
 }
 
 settings {

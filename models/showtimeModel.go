@@ -30,6 +30,14 @@ func NewShowTime(price int, startTime time.Time, availableSeats int, movieID int
 	}
 }
 
+func (st ShowTime) Type() string {
+	return "ShowTime"
+}
+
+func (st *ShowTime) Preload(db *gorm.DB) *gorm.DB {
+	return db.Preload("Theater").Preload("Reservations")
+}
+
 func (st *ShowTime) BeforeSave(tx *gorm.DB) error {
 	// Load theater if not already loaded
 	if st.Theater == nil && st.TheaterID != 0 {
@@ -51,6 +59,7 @@ func (st *ShowTime) BeforeSave(tx *gorm.DB) error {
 	if st.StartTime.Before(time.Now()) {
 		return fmt.Errorf("invalid start time")
 	}
+
 	return nil
 }
 
