@@ -20,7 +20,7 @@ type Preloadable interface {
 }
 
 func NewService[T server](db *gorm.DB, model T) *Service[T] {
-	fmt.Printf("%s Service initialized", model.Type())
+	fmt.Printf("%s Service initialized\n", model.Type())
 	return &Service[T]{db: db}
 }
 

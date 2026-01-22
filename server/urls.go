@@ -14,7 +14,8 @@ import (
 type url struct {
 	db *gorm.DB
 
-	authHandlers        *handlers.AuthHandler
+	authHandlers *handlers.AuthHandler
+
 	movieHandlers       *handlers.MovieHandler
 	reservationHandlers *handlers.ReservationHandler
 	theaterHandlers     *handlers.TheaterHandler
@@ -28,10 +29,11 @@ func NewServer(db *gorm.DB, env *models.Env, refreshStore map[uint]string) *url 
 	return &url{
 		db: db,
 
-		authHandlers:        handlers.NewAuthHandler(services.NewAuthService(db), env, refreshStore),
-		movieHandlers:       handlers.NewMovieHandler(services.NewMovieService(db)),
-		reservationHandlers: handlers.NewReservationHandler(services.NewReservationService(db)),
-		theaterHandlers:     handlers.NewTheaterHandler(services.NewTheaterService(db)),
+		authHandlers: handlers.NewAuthHandler(services.NewAuthService(db), env, refreshStore),
+
+		movieHandlers:       handlers.NewMovieHandler(services.NewService(db, models.Movie{})),
+		theaterHandlers:     handlers.NewTheaterHandler(services.NewService(db, models.Theater{})),
+		reservationHandlers: handlers.NewReservationHandler(services.NewService(db, models.Reservation{})),
 		showtimeHandlers:    handlers.NewShowtimeHandler(services.NewService(db, models.ShowTime{})),
 
 		authMiddleware: middleware.NewAuthMiddleware(env, refreshStore),
@@ -49,12 +51,9 @@ func (s *url) Run() {
 	s.movie(mux)
 	s.theater(mux)
 	s.showtime(mux)
-
-	// static Dir
-	// mux.Handle("/static/", s.authMiddleware.ProtectMiddleware(http.StripPrefix("/static/", http.FileServer(http.Dir(path[1:]))).ServeHTTP))
+	s.reservation(mux)
 
 	http.ListenAndServe(":8080", mux)
-	// Implement server run logic here
 }
 
 func (s *url) auth(mux *http.ServeMux) {
@@ -72,8 +71,8 @@ func (s *url) movie(mux *http.ServeMux) {
 
 	// admin
 	mux.Handle("/movie/add", s.authMiddleware.ProtectMiddleware(middleware.AdminMiddleware(http.HandlerFunc(s.movieHandlers.AddMovieHandler))))
-	mux.Handle("/movie/update/{id}", s.authMiddleware.ProtectMiddleware(middleware.AdminMiddleware(http.HandlerFunc(s.movieHandlers.UpdateMovieHandler))))
-	mux.Handle("/movies/delete/{id}", s.authMiddleware.ProtectMiddleware(middleware.AdminMiddleware(http.HandlerFunc(s.movieHandlers.DeleteMovieHandler))))
+	mux.Handle("/movie/{id}/update", s.authMiddleware.ProtectMiddleware(middleware.AdminMiddleware(http.HandlerFunc(s.movieHandlers.UpdateMovieHandler))))
+	mux.Handle("/movie/{id}/delete", s.authMiddleware.ProtectMiddleware(middleware.AdminMiddleware(http.HandlerFunc(s.movieHandlers.DeleteMovieHandler))))
 }
 
 func (s *url) theater(mux *http.ServeMux) {
@@ -94,4 +93,12 @@ func (s *url) showtime(mux *http.ServeMux) {
 	mux.Handle("/showtime/add", s.authMiddleware.ProtectMiddleware(middleware.AdminMiddleware(http.HandlerFunc(s.showtimeHandlers.CreateShowtime))))
 	mux.Handle("/showtime/{id}/update", s.authMiddleware.ProtectMiddleware(middleware.AdminMiddleware(http.HandlerFunc(s.showtimeHandlers.UpdateShowtime))))
 	mux.Handle("/showtime/{id}/delete", s.authMiddleware.ProtectMiddleware(middleware.AdminMiddleware(http.HandlerFunc(s.showtimeHandlers.DeleteShowtime))))
+}
+
+func (s *url) reservation(mux *http.ServeMux) {
+	mux.Handle("/reservation/{id}", s.authMiddleware.ProtectMiddleware(http.HandlerFunc(s.reservationHandlers.GetReservation)))
+	mux.Handle("/reservations", s.authMiddleware.ProtectMiddleware(http.HandlerFunc(s.reservationHandlers.GetAllReservations)))
+	mux.Handle("/reservation/add", s.authMiddleware.ProtectMiddleware(http.HandlerFunc(s.reservationHandlers.CreateReservation)))
+	mux.Handle("/reservation/{id}/update", s.authMiddleware.ProtectMiddleware(http.HandlerFunc(s.reservationHandlers.UpdateReservation)))
+	mux.Handle("/reservation/{id}/delete", s.authMiddleware.ProtectMiddleware(http.HandlerFunc(s.reservationHandlers.DeleteReservation)))
 }

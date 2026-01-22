@@ -40,6 +40,15 @@ func (st *ShowTime) Preload(db *gorm.DB) *gorm.DB {
 
 func (st *ShowTime) BeforeSave(tx *gorm.DB) error {
 	// Load theater if not already loaded
+	var movie Movie
+	if err := tx.First(&movie, st.MovieID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return fmt.Errorf("movie not found")
+		} else {
+			return err
+		}
+	}
+
 	if st.Theater == nil && st.TheaterID != 0 {
 		var th Theater
 		if err := tx.First(&th, st.TheaterID).Error; err != nil {

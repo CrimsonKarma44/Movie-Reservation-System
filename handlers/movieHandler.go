@@ -10,10 +10,10 @@ import (
 )
 
 type MovieHandler struct {
-	movieService *services.MovieService
+	movieService *services.Service[models.Movie]
 }
 
-func NewMovieHandler(movieService *services.MovieService) *MovieHandler {
+func NewMovieHandler(movieService *services.Service[models.Movie]) *MovieHandler {
 	return &MovieHandler{
 		movieService: movieService,
 	}
@@ -27,7 +27,7 @@ func (mh *MovieHandler) AddMovieHandler(w http.ResponseWriter, r *http.Request) 
 			http.Error(w, "invalid request", http.StatusBadRequest)
 			return
 		}
-		err := mh.movieService.AddMovie(movie)
+		err := mh.movieService.Add(movie)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -54,7 +54,7 @@ func (mh *MovieHandler) UpdateMovieHandler(w http.ResponseWriter, r *http.Reques
 		}
 		
 		fmt.Println("reached this point")
-		err = mh.movieService.UpdateMovie(id, movie)
+		err = mh.movieService.Update(id, movie)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -74,7 +74,7 @@ func (mh *MovieHandler) DeleteMovieHandler(w http.ResponseWriter, r *http.Reques
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		if err := mh.movieService.DeleteMovie(id); err != nil {
+		if err := mh.movieService.Delete(id); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -93,7 +93,7 @@ func (mh *MovieHandler) GetMovieHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		movie, err = mh.movieService.GetMovieByID(id)
+		movie, err = mh.movieService.GetByID(id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -111,7 +111,7 @@ func (mh *MovieHandler) GetAllMoviesHandler(w http.ResponseWriter, r *http.Reque
 	if r.Method == http.MethodGet {
 		var movie []models.Movie
 
-		movie, err := mh.movieService.GetMovies()
+		movie, err := mh.movieService.GetAll()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

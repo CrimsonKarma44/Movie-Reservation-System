@@ -28,3 +28,7 @@ func (movie Movie) New(title string, description string, year int, duration int)
 func (movie Movie) Type() string {
 	return "Movie"
 }
+
+func (movie *Movie) Preload(db *gorm.DB) *gorm.DB {
+	return db.Preload("ShowTime").Preload("ShowTime.Theater")
+}

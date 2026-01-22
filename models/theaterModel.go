@@ -25,3 +25,6 @@ func NewTheater(name string, capacity int, location string) Theater {
 func (theater Theater) Type() string {
 	return "Theater"
 }
+func (theater *Theater) Preload(db *gorm.DB) *gorm.DB {
+	return db.Preload("ShowTimes")
+}

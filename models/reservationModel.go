@@ -29,6 +29,7 @@ func (rm Reservation) Type() string {
 	return "Reservation"
 }
 
+
 func (rm *Reservation) SetExpired() {
 	rm.expiryStatus = true
 }
@@ -50,4 +51,9 @@ func (rm *ReservationsModel) Create(reservation Reservation) {
 
 func (rm *ReservationsModel) Get() []Reservation {
 	return rm.reservations
+}
+
+// to complete
+func (rm *ReservationsModel) BeforeSave(tx *gorm.DB) error {
+	return nil
 }

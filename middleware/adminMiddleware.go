@@ -18,7 +18,7 @@ func AdminMiddleware(next http.Handler) http.Handler {
 
 		// Check if the user is an admin
 		if !claims.IsAdmin {
-			http.Error(w, "forbidden", http.StatusForbidden)
+			http.Error(w, "forbidden: requires admin privileges", http.StatusForbidden)
 			return
 		}
 
