@@ -43,6 +43,21 @@ func (s *Service[T]) GetByID(id int) (*T, error) {
 	return &entity, nil
 }
 
+func (s *Service[T]) GetAllByID(id int) (*[]T, error) {
+	var entity []T
+	db := s.db
+
+	var dummy T
+	if p, ok := any(&dummy).(Preloadable); ok {
+		db = p.Preload(db)
+	}
+
+	if err := db.Where("user_id = ?", id).Find(&entity).Error; err != nil {
+		return nil, err
+	}
+	return &entity, nil
+}
+
 func (s *Service[T]) GetAll() ([]T, error) {
 	var entity []T
 

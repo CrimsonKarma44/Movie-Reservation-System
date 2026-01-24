@@ -98,7 +98,6 @@ func (a *AuthMiddleware) ProtectMiddleware(next http.Handler) http.Handler {
 		}
 
 		ctx := context.WithValue(r.Context(), utils.UserContextKey, claim)
-		// fmt.Println(claim.ID, claim.IsAdmin)
 
 		// Call the next handler
 		next.ServeHTTP(w, r.WithContext(ctx))

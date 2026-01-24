@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fmt"
+
 	"gorm.io/gorm"
 )
 
@@ -29,9 +31,27 @@ func (rm Reservation) Type() string {
 	return "Reservation"
 }
 
-
 func (rm *Reservation) SetExpired() {
 	rm.expiryStatus = true
+}
+
+func (rm *Reservation) BeforeSave(tx *gorm.DB) error {
+	if err := tx.First(&User{}, rm.UserID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return fmt.Errorf("dependent Record not found: %v", err)
+		}
+	}
+
+	var showtime ShowTime
+	if err := tx.First(&showtime, rm.ShowTimeID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return fmt.Errorf("dependent Record not found: %v", err)
+		}
+	}
+
+	rm.Cost = rm.Seats * showtime.Price
+
+	return nil
 }
 
 // kept aside for now
@@ -51,9 +71,4 @@ func (rm *ReservationsModel) Create(reservation Reservation) {
 
 func (rm *ReservationsModel) Get() []Reservation {
 	return rm.reservations
-}
-
-// to complete
-func (rm *ReservationsModel) BeforeSave(tx *gorm.DB) error {
-	return nil
 }

@@ -2,11 +2,14 @@ package moviereservationsystem
 
 import (
 	"fmt"
+	"log"
 	"movie-reservation-system/handlers"
 	"movie-reservation-system/middleware"
 	"movie-reservation-system/models"
 	"movie-reservation-system/services"
 	"net/http"
+	// _ "net/http/pprof"
+	// +
 
 	"gorm.io/gorm"
 )
@@ -43,6 +46,7 @@ func NewServer(db *gorm.DB, env *models.Env, refreshStore map[uint]string) *url 
 
 func (s *url) Run() {
 	fmt.Println("API Server Initializing...")
+	// log.Printf("Access pprof at: http://localhost%s/debug/pprof/", ":8080")
 
 	// routes
 	mux := http.NewServeMux()
@@ -53,7 +57,9 @@ func (s *url) Run() {
 	s.showtime(mux)
 	s.reservation(mux)
 
-	http.ListenAndServe(":8080", mux)
+	if err := http.ListenAndServe(":8080", mux); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (s *url) auth(mux *http.ServeMux) {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"movie-reservation-system/models"
 	"movie-reservation-system/services"
+	"movie-reservation-system/utils"
 	"net/http"
 	"strconv"
 )
@@ -22,11 +23,19 @@ func NewReservationHandler(reservationService *services.Service[models.Reservati
 func (st *ReservationHandler) CreateReservation(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Create Reservation Handler...")
 	if r.Method == http.MethodPost {
+		claims, ok := r.Context().Value(utils.UserContextKey).(*models.Claims)
+		if !ok {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
 		var reservation *models.Reservation
 		if err := json.NewDecoder(r.Body).Decode(&reservation); err != nil {
 			http.Error(w, "invalid request", http.StatusBadRequest)
 			return
 		}
+
+		reservation.UserID = int(claims.ID)
 
 		if err := st.reservationService.Add(reservation); err != nil {
 			fmt.Println(err)
@@ -45,11 +54,23 @@ func (st *ReservationHandler) CreateReservation(w http.ResponseWriter, r *http.R
 
 func (rh *ReservationHandler) GetReservation(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
+		claims, ok := r.Context().Value(utils.UserContextKey).(*models.Claims)
+		if !ok {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
 		reservationID := r.PathValue("id")
 
 		id, err := strconv.Atoi(reservationID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		if !claims.IsAdmin {
+			if id != int(claims.ID) {
+				http.Error(w, "operation not allowed for this user", http.StatusUnauthorized)
+			}
 		}
 
 		reservation, err := rh.reservationService.GetByID(id)
@@ -73,7 +94,13 @@ func (rh *ReservationHandler) GetReservation(w http.ResponseWriter, r *http.Requ
 
 func (rh *ReservationHandler) GetAllReservations(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		reservations, err := rh.reservationService.GetAll()
+		claims, ok := r.Context().Value(utils.UserContextKey).(*models.Claims)
+		if !ok {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		reservations, err := rh.reservationService.GetAllByID(int(claims.ID))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
