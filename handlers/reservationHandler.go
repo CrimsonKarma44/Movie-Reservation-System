@@ -67,11 +67,11 @@ func (rh *ReservationHandler) GetReservation(w http.ResponseWriter, r *http.Requ
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		// if !claims.IsAdmin {
-		// 	if id != int(claims.ID) {
-		// 		http.Error(w, "operation not allowed for this user", http.StatusUnauthorized)
-		// 	}
-		// }
+		if !claims.IsAdmin {
+			if id != int(claims.ID) {
+				http.Error(w, "operation not allowed for this user", http.StatusUnauthorized)
+			}
+		}
 
 		reservation, err := rh.reservationService.GetByID(id)
 		if err != nil {
