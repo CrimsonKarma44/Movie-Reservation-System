@@ -9,8 +9,7 @@ var err error
 var app *server.App
 
 func main() {
-	var refreshStore = make(map[uint]string)
-	err = app.Init(refreshStore)
+	err = app.Init()
 	if err != nil {
 		fmt.Printf("Error initializing application: %v\n", err)
 	}

@@ -37,7 +37,7 @@ func (db *DatabaseService) initialize(dns string) error {
 }
 
 func (db *DatabaseService) Migrate() error {
-	err := db.DB.AutoMigrate(&models.User{}, &models.Movie{}, &models.Reservation{}, &models.Theater{},&models.ShowTime{})
+	err := db.DB.AutoMigrate(&models.User{}, &models.Movie{}, &models.Reservation{}, &models.Theater{}, &models.ShowTime{})
 	if err != nil {
 		log.Fatalf("Error auto migrate lists: %v", err)
 		return err

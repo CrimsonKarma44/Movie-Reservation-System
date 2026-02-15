@@ -1,0 +1,52 @@
+# Potential Issues in Movie Reservation System
+
+## 1. Authentication Security Issues
+- Token Storage: Using cookies with Secure: false means tokens will be sent over HTTP connections, which is insecure
+- Refresh Token Rotation: The refresh token rotation mechanism has potential vulnerabilities
+- No Token Blacklisting: Once logged out, old tokens remain valid until expiration
+- Weak Session Management: No mechanism to invalidate all user sessions
+
+## 2. Concurrency and Race Condition Risks
+- Seat Availability: Critical race condition in booking system - multiple users could book the same seats simultaneously
+- No Transaction Isolation: Database operations lack proper transaction boundaries
+- Shared Memory Access: The refresh token store map isn't thread-safe
+
+## 3. Data Integrity Issues
+- Insufficient Validation: Input validation is minimal across the application
+- No Constraints: Missing database constraints could lead to inconsistent data
+- Business Logic Validation: The BeforeSave hooks in models need more robust validation
+
+## 4. Error Handling and Logging
+- Poor Error Handling: Generic error messages expose internal details
+- No Structured Logging: Missing proper logging for debugging and monitoring
+- Silent Failures: Some operations fail silently without proper notification
+
+## 5. API Security Concerns
+- No Rate Limiting: Application vulnerable to DoS attacks
+- Missing Input Sanitization: Potential for injection attacks
+- Over-privileged Operations: Some endpoints allow operations without proper checks
+
+## 6. Database Transaction Handling
+- No Explicit Transactions: Critical operations like reservations aren't wrapped in transactions
+- No Rollback Mechanisms: Failed operations could leave data in inconsistent states
+
+## 7. Additional Production Concerns
+- No Health Checks: Missing endpoints to monitor application health
+- No Configuration Management: Environment variables loaded without validation
+- Missing Metrics: No performance monitoring or observability
+- CORS Policy: No cross-origin resource sharing configuration
+- Request Size Limits: No protection against large payload attacks
+
+## Recommended Improvements
+1. Implement proper mutex locks for shared resources
+2. Add distributed locking for seat reservation
+3. Use Redis for session management instead of in-memory maps
+4. Implement proper transaction boundaries for critical operations
+5. Add comprehensive input validation and sanitization
+6. Implement rate limiting and request throttling
+7. Add structured logging with log levels
+8. Add health check and metrics endpoints
+9. Implement proper error responses that don't expose internal details
+10. Add database connection pooling and timeout configurations
+
+These issues could significantly impact the stability, security, and scalability of your application in a production environment. The most critical issue is the race condition in seat booking, which could lead to overbooking and financial losses.

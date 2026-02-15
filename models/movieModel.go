@@ -18,10 +18,10 @@ type Movie struct {
 
 func (movie Movie) New(title string, description string, year int, duration int) Movie {
 	return Movie{
-		Title:       movie.Title,
-		Description: movie.Description,
-		Year:        movie.Year,
-		Duration:    movie.Duration,
+		Title:       title,
+		Description: description,
+		Year:        year,
+		Duration:    duration,
 	}
 }
 

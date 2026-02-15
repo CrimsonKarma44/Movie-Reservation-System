@@ -1,0 +1,56 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.25.5'
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run tests
+        env:
+          DB_USER: test
+          DB_PASSWORD: test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: test_db
+          JWT_SECRET_KEY_ACCESS: test-secret
+          JWT_SECRET_KEY_REFRESH: test-secret
+          ADMIN: admin
+          ADMIN_EMAIL: admin@test.com
+          ADMIN_PASSWORD: admin
+        run: go test -v ./...
+
+      - name: Run linter (golangci-lint)
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+        continue-on-error: true

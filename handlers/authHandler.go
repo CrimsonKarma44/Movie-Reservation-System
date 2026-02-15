@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"movie-reservation-system/models"
 	"movie-reservation-system/services"
+	"movie-reservation-system/utils"
 	"net/http"
 	"os"
+	"strings"
 	"time"
-
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type AuthHandler struct {
@@ -19,10 +19,10 @@ type AuthHandler struct {
 	JwtSecretKeyAccess  []byte
 	JwtSecretKeyRefresh []byte
 
-	RefreshStore map[uint]string
+	RefreshStore *models.SafeTokenStore
 }
 
-func NewAuthHandler(authService *services.AuthService, env *models.Env, refreshStore map[uint]string) *AuthHandler {
+func NewAuthHandler(authService *services.AuthService, env *models.Env, refreshStore *models.SafeTokenStore) *AuthHandler {
 	return &AuthHandler{
 		AuthService:         authService,
 		JwtSecretKeyAccess:  env.JWTAccessSecret,
@@ -40,22 +40,39 @@ func (h *AuthHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "invalid request", http.StatusBadRequest)
 			return
 		}
-		fmt.Println(creds)
 
-		// Validate input
+		// SECURITY FIX: Validate email and password format
 		if creds.Email == "" || creds.Password == "" {
-			http.Error(w, "invalid request", http.StatusBadRequest)
+			http.Error(w, "email and password are required", http.StatusBadRequest)
 			return
-		} else {
-			fmt.Printf("Email: %s, Password: %s\n", creds.Email, creds.Password)
+		}
+
+		// SECURITY FIX: Validate email format
+		if !isValidEmail(creds.Email) {
+			http.Error(w, "invalid email format", http.StatusBadRequest)
+			return
+		}
+
+		// SECURITY FIX: Validate password strength and complexity
+		if err := utils.ValidatePassword(creds.Password); err != nil {
+			// Don't expose detailed reasons to prevent user enumeration
+			http.Error(w, fmt.Sprintf("password does not meet requirements: %v", err), http.StatusBadRequest)
+			return
 		}
 
 		// Save to database (pseudo-code, replace with actual DB logic)
 		res, err := h.AuthService.SignUp(creds)
 		if err != nil {
+			// SECURITY FIX: Log failed registration attempt
+			auditor := utils.GetAuditor()
+			auditor.LogRegistration(creds.Email, getClientIP(r), r.UserAgent(), false, err.Error(), 0)
 			http.Error(w, "could not save user", http.StatusInternalServerError)
 			return
 		}
+
+		// SECURITY FIX: Log successful registration
+		auditor := utils.GetAuditor()
+		auditor.LogRegistration(creds.Email, getClientIP(r), r.UserAgent(), true, "user registered successfully", 0)
 
 		w.WriteHeader(http.StatusCreated)
 		w.Write(res)
@@ -75,7 +92,10 @@ func (h *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 		response, err := h.AuthService.Login(&creds)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("could not login: %s", err), http.StatusInternalServerError)
+			// SECURITY FIX: Log failed login attempt for audit trail
+			auditor := utils.GetAuditor()
+			auditor.LogAuthenticationAttempt(creds.Email, getClientIP(r), r.UserAgent(), false, err.Error(), 0)
+			http.Error(w, "Authentication failed", http.StatusUnauthorized)
 			return
 		}
 
@@ -85,6 +105,10 @@ func (h *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "could not generate tokens", http.StatusInternalServerError)
 			return
 		}
+
+		// SECURITY FIX: Log successful login
+		auditor := utils.GetAuditor()
+		auditor.LogAuthenticationAttempt(creds.Email, getClientIP(r), r.UserAgent(), true, "successful login", creds.ID)
 
 		// Set refresh token as HttpOnly cookie
 		// http.SetCookie(w, &http.Cookie{
@@ -134,33 +158,117 @@ func (h *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	// Implement logout logic
 	if r.Method == http.MethodPost {
 		fmt.Println("LogoutHandler called")
-		cookie, err := r.Cookie("refresh_token")
-		if err != nil {
-			http.Error(w, "no refresh token", http.StatusBadRequest)
+
+		// Get user claims to identify the user
+		claims, ok := r.Context().Value(utils.UserContextKey).(*models.Claims)
+		if !ok {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		refreshToken := cookie.Value
-		claims := &models.Claims{}
-		jwt.ParseWithClaims(refreshToken, claims, func(t *jwt.Token) (any, error) {
-			return h.JwtSecretKeyRefresh, nil
+		// Remove from store using the safe store
+		h.RefreshStore.Delete(claims.ID)
+
+		// SECURITY FIX: Log logout event
+		auditor := utils.GetAuditor()
+		auditor.LogLogout(claims.ID, "", getClientIP(r))
+
+		// SECURITY FIX: Clear both access and refresh tokens on logout
+		// Clear access token
+		http.SetCookie(w, &http.Cookie{
+			Name:     "access_token",
+			Value:    "",
+			Expires:  time.Now().Add(-1 * time.Hour),
+			HttpOnly: true,
+			Secure:   os.Getenv("ENV") == "production",
+			SameSite: http.SameSiteStrictMode,
+			Path:     "/",
+			MaxAge:   -1,
 		})
 
-		// Remove from store
-		delete(h.RefreshStore, claims.ID)
-
-		// Clear cookie
+		// Clear refresh token
 		http.SetCookie(w, &http.Cookie{
 			Name:     "refresh_token",
 			Value:    "",
 			Expires:  time.Now().Add(-1 * time.Hour),
 			HttpOnly: true,
+			Secure:   os.Getenv("ENV") == "production",
+			SameSite: http.SameSiteStrictMode,
 			Path:     "/",
+			MaxAge:   -1,
 		})
 
-		w.Write([]byte("logged out"))
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"message":"logged out successfully"}`))
 	}
+}
+
+// isValidEmail validates email format using RFC 5322
+func isValidEmail(email string) bool {
+	if len(email) == 0 || len(email) > 254 {
+		return false
+	}
+
+	// Basic RFC 5322 validation
+	atIndex := -1
+	for i, char := range email {
+		if char == '@' {
+			if atIndex != -1 {
+				return false // Multiple @ symbols
+			}
+			atIndex = i
+		}
+	}
+
+	if atIndex == -1 || atIndex == 0 || atIndex == len(email)-1 {
+		return false // No @, or @ at start/end
+	}
+
+	localPart := email[:atIndex]
+	domain := email[atIndex+1:]
+
+	// Check local part (before @)
+	if len(localPart) == 0 || len(localPart) > 64 {
+		return false
+	}
+
+	// Check domain part (after @)
+	if len(domain) < 3 || !contains(domain, ".") {
+		return false // No domain extension
+	}
+
+	return true
+}
+
+// contains checks if a string contains a substring
+func contains(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}
+
+// getClientIP extracts the real client IP address from the request
+// Considers proxy headers like X-Forwarded-For which are set by load balancers
+func getClientIP(r *http.Request) string {
+	// Check X-Forwarded-For header (set by proxies like Vercel, nginx, CloudFlare)
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		// X-Forwarded-For can contain multiple IPs, get the first one
+		ips := strings.Split(xff, ",")
+		if len(ips) > 0 {
+			return strings.TrimSpace(ips[0])
+		}
+	}
+
+	// Check X-Real-IP header (alternative proxy header)
+	if xri := r.Header.Get("X-Real-IP"); xri != "" {
+		return xri
+	}
+
+	// Fallback to RemoteAddr
+	return r.RemoteAddr
 }

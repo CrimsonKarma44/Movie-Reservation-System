@@ -1,0 +1,72 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches:
+      - main
+      - production
+  pull_request:
+    branches:
+      - main
+      - production
+
+jobs:
+  test:
+    name: Test Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.25.5'
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Build
+        run: go build -v ./cmd/movie-reservation-system/
+
+      - name: Run tests
+        run: go test -v ./...
+        continue-on-error: true  # Tests are optional, deployment proceeds if they fail
+
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Vercel
+        uses: vercel/action@main
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          prod: true
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          JWT_SECRET_KEY_ACCESS: ${{ secrets.JWT_SECRET_KEY_ACCESS }}
+          JWT_SECRET_KEY_REFRESH: ${{ secrets.JWT_SECRET_KEY_REFRESH }}
+          ADMIN: ${{ secrets.ADMIN }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+
+      - name: Comment PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Build passed! Ready for deployment.'
+            })

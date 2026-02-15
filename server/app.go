@@ -13,15 +13,18 @@ import (
 )
 
 type App struct {
-	defaultAdmin models.User
+	// defaultAdmin models.User
 }
 
-func (app *App) Init(refreshStore map[uint]string) error {
+func (app *App) Init() error {
 	err := godotenv.Load()
 	if err != nil {
 		return fmt.Errorf("Error loading .env file")
 	}
 	var ENV = models.NewEnv()
+
+	// Initialize thread-safe refresh token store
+	refreshStore := models.NewSafeTokenStore()
 
 	// starts the Database server
 	db, err := services.NewDatabaseService(app.dns(ENV))
@@ -41,6 +44,32 @@ func (app *App) Init(refreshStore map[uint]string) error {
 
 	return nil
 }
+
+// func (app *App) Init(refreshStore map[uint]string) error {
+// 	err := godotenv.Load()
+// 	if err != nil {
+// 		return fmt.Errorf("Error loading .env file")
+// 	}
+// 	var ENV = models.NewEnv()
+
+// 	// starts the Database server
+// 	db, err := services.NewDatabaseService(app.dns(ENV))
+// 	if err != nil {
+// 		return fmt.Errorf("Error initializing database")
+// 	}
+
+// 	// performst the initial migrations
+// 	db.Migrate()
+
+// 	// creates the default admin user
+// 	app.CreateDefaultAdmin(db.DB, ENV)
+
+// 	// starts the server
+// 	server := NewServer(db.DB, ENV, refreshStore)
+// 	server.Run()
+
+// 	return nil
+// }
 
 func (app *App) dns(env *models.Env) string {
 	if env.DBHost == "" || env.DBPassword == "" || env.DBName == "" {
