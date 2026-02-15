@@ -7,11 +7,12 @@ import (
 )
 
 type Env struct {
-	DBUser     string
-	DBPassword string
-	DBHost     string
-	DBPort     string
-	DBName     string
+	DBUser       string
+	DBPassword   string
+	DBHost       string
+	DBPort       string
+	DBName       string
+	DATABASE_URL string
 
 	JWTAccessSecret  []byte
 	JWTRefreshSecret []byte
@@ -57,9 +58,10 @@ func NewEnv() *Env {
 	return &Env{
 		DBUser:     os.Getenv("DB_USER"),
 		DBPassword: os.Getenv("DB_PASSWORD"),
-		DBHost:     os.Getenv("DB_HOST"),
-		DBPort:     os.Getenv("DB_PORT"),
-		DBName:     os.Getenv("DB_NAME"),
+		DBHost:       os.Getenv("DB_HOST"),
+		DBPort:       os.Getenv("DB_PORT"),
+		DBName:       os.Getenv("DB_NAME"),
+		DATABASE_URL: os.Getenv("DATABASE_URL"),
 
 		JWTAccessSecret:  []byte(jwtAccessSecret),
 		JWTRefreshSecret: []byte(jwtRefreshSecret),

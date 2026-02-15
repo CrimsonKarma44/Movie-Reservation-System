@@ -3,7 +3,6 @@ package moviereservationsystem
 import (
 	"errors"
 	"fmt"
-	"log"
 	"movie-reservation-system/models"
 	"movie-reservation-system/services"
 	"movie-reservation-system/utils"
@@ -45,48 +44,23 @@ func (app *App) Init() error {
 	return nil
 }
 
-// func (app *App) Init(refreshStore map[uint]string) error {
-// 	err := godotenv.Load()
-// 	if err != nil {
-// 		return fmt.Errorf("Error loading .env file")
-// 	}
-// 	var ENV = models.NewEnv()
-
-// 	// starts the Database server
-// 	db, err := services.NewDatabaseService(app.dns(ENV))
-// 	if err != nil {
-// 		return fmt.Errorf("Error initializing database")
-// 	}
-
-// 	// performst the initial migrations
-// 	db.Migrate()
-
-// 	// creates the default admin user
-// 	app.CreateDefaultAdmin(db.DB, ENV)
-
-// 	// starts the server
-// 	server := NewServer(db.DB, ENV, refreshStore)
-// 	server.Run()
-
-// 	return nil
-// }
-
 func (app *App) dns(env *models.Env) string {
-	if env.DBHost == "" || env.DBPassword == "" || env.DBName == "" {
-		log.Fatalf("Missing required environment variables")
-	}
+	// if env.DBHost == "" || env.DBPassword == "" || env.DBName == "" {
+	// 	log.Fatalf("Missing required environment variables")
+	// }
 
-	if env.DBPort == "" {
-		env.DBPort = "5432"
-	}
+	// if env.DBPort == "" {
+	// 	env.DBPort = "5432"
+	// }
 
-	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-		env.DBHost,
-		env.DBUser,
-		env.DBPassword,
-		env.DBName,
-		env.DBPort,
-	)
+	// return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+	// 	env.DBHost,
+	// 	env.DBUser,
+	// 	env.DBPassword,
+	// 	env.DBName,
+	// 	env.DBPort,
+	// )
+	return env.DATABASE_URL
 }
 
 func (app *App) CreateDefaultAdmin(db *gorm.DB, env *models.Env) (models.User, error) {
